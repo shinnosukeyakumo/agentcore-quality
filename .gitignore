@@ -1,0 +1,26 @@
+# シークレット（.env は .env.op から生成する）
+.env
+.env.*
+!.env.op
+!.env.example
+
+# AWS アカウント ID・ARN が書き込まれるファイル
+cdk.context.json
+.bedrock_agentcore.yaml
+.bedrock_agentcore/
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Node.js
+node_modules/
+
+# CDK
+cdk.out/
