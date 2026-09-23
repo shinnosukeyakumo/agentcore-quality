@@ -1,0 +1,30 @@
+{"id": "q01", "category": "answerable", "question": "新画面で出勤の打刻はどこから行いますか？", "expected_response": "ホーム画面の右上にある「出勤」ボタンを押す。押した時刻が出勤時刻として記録される。", "sources": ["02-clock-in-new.md"]}
+{"id": "q02", "category": "answerable", "question": "打刻の時刻を間違えました。自分で直せますか？", "expected_response": "打刻した時刻を本人が直接書き換えることはできない。「勤怠」>「日次一覧」から打刻修正申請を出し、承認者が承認すると修正される。承認されるまでは元の打刻が有効。", "sources": ["04-fix-time-record.md"]}
+{"id": "q03", "category": "answerable", "question": "打刻修正申請を出すとき、修正理由の入力は必須ですか？", "expected_response": "必須。修正理由を入力しないと申請できない。", "sources": ["04-fix-time-record.md"]}
+{"id": "q04", "category": "answerable", "question": "まだ承認されていない休暇申請を取り消したいです。どうすればいいですか？", "expected_response": "「申請」>「申請一覧」で状態が「申請中」の申請を選び、「取り消す」を押す。取り消すとすぐに無効になり、承認者への通知は送られない。", "sources": ["06-cancel-request.md"]}
+{"id": "q05", "category": "answerable", "question": "スタンダードプランです。承認済みの休暇申請を無かったことにしたいです。", "expected_response": "承認済みの申請は取り消しではなく「取り下げ申請」が必要。「申請」>「申請一覧」で承認済みの申請を選び、「取り下げを申請」を押して理由を入力する。承認者が取り下げ申請を承認すると完了し、それまでは元の申請が有効。", "sources": ["07-withdraw-approved.md"]}
+{"id": "q06", "category": "answerable", "question": "有給休暇の残日数はどこで確認できますか？", "expected_response": "「申請」>「休暇」画面の上部に表示される。", "sources": ["05-request-leave.md"]}
+{"id": "q07", "category": "answerable", "question": "複数日の休暇をまとめて申請できますか？", "expected_response": "できる。「申請」>「休暇」で開始日と終了日を指定して申請する。", "sources": ["05-request-leave.md"]}
+{"id": "q08", "category": "answerable", "question": "承認者が申請を差し戻すとき、理由の入力は必要ですか？", "expected_response": "必須。差し戻しの理由を入力しないと差し戻せない。差し戻された申請は申請者に通知され、申請者は内容を直して再申請できる。", "sources": ["09-approve-requests.md"]}
+{"id": "q09", "category": "answerable", "question": "複数の申請をまとめて承認する方法はありますか？", "expected_response": "「承認」>「承認待ち」の一覧でチェックを入れて「一括承認」を押す。", "sources": ["09-approve-requests.md"]}
+{"id": "q10", "category": "answerable", "question": "承認者を変更したいのですが、どこで設定しますか？", "expected_response": "承認者の設定は管理者のみ変更できる。「設定」>「組織」>「承認ルート」から変更する。", "sources": ["09-approve-requests.md"]}
+{"id": "q11", "category": "answerable", "question": "月次締めが終わった月の打刻に間違いを見つけました。従業員の私はどうすればいいですか？", "expected_response": "締めが完了した月は本人から修正申請を出せない。管理者に連絡して依頼する。管理者は「勤怠」>「月次締め」で締めを解除し、日次一覧の「管理者として修正」で直してから再度締める。", "sources": ["12-monthly-closing.md", "04-fix-time-record.md"]}
+{"id": "q12", "category": "answerable", "question": "未承認の申請が残っている状態で月次締めはできますか？", "expected_response": "できない。先に未承認の申請を承認または差し戻ししてから締める。", "sources": ["12-monthly-closing.md"]}
+{"id": "q13", "category": "answerable", "question": "新画面の CSV 出力では、過去何か月分まで指定できますか？", "expected_response": "過去 24 か月分まで開始日と終了日で指定できる。", "sources": ["13-export-csv.md"]}
+{"id": "q14", "category": "answerable", "question": "一般の従業員は自分の勤怠を CSV でダウンロードできますか？", "expected_response": "できない。CSV 出力は管理者と承認者のみ。一般の従業員は画面で自分の勤怠を確認できる。", "sources": ["13-export-csv.md"]}
+{"id": "q15", "category": "answerable", "question": "出力される CSV の文字コードは何ですか？", "expected_response": "UTF-8（BOM 付き）。", "sources": ["13-export-csv.md"]}
+{"id": "q16", "category": "answerable", "question": "退勤の打刻を忘れたとき、通知はいつ届きますか？", "expected_response": "退勤の打刻が無いまま所定の終業時刻から 2 時間が経過すると本人に通知が届く。通知の時間は変更できない。", "sources": ["14-notifications.md"]}
+{"id": "q17", "category": "answerable", "question": "パスワード再設定メールのリンクの有効期限はどのくらいですか？", "expected_response": "30 分。", "sources": ["15-login-password.md"]}
+{"id": "q18", "category": "answerable", "question": "パスワードを 5 回間違えてログインできなくなりました。どうすればいいですか？", "expected_response": "5 回連続で間違えると 30 分間ログインできなくなる。30 分待つか、急ぐ場合は管理者にパスワードのリセットを依頼する。", "sources": ["15-login-password.md"]}
+{"id": "q19", "category": "answerable", "question": "GPS 打刻で位置情報が取得できなかった場合、打刻はどうなりますか？", "expected_response": "打刻自体は記録される。位置情報は「取得できませんでした」と表示される。", "sources": ["11-gps-clock-in.md"]}
+{"id": "q20", "category": "answerable", "question": "従業員が自分のシフトを変更することはできますか？", "expected_response": "できない。「シフト」>「マイシフト」で確認のみ可能。変更が必要な場合は管理者に依頼する。", "sources": ["10-shift-settings.md"]}
+{"id": "q21", "category": "unanswerable", "question": "給与計算ソフトと連携できますか？", "expected_response": "ヘルプに記載がないため回答できない。サポート窓口または管理者への確認を案内する。", "sources": []}
+{"id": "q22", "category": "unanswerable", "question": "承認依頼の通知を Slack に送ることはできますか？", "expected_response": "ヘルプに記載がないため回答できない。サポート窓口または管理者への確認を案内する。", "sources": []}
+{"id": "q23", "category": "unanswerable", "question": "有給休暇は入社から何か月後に何日付与されますか？", "expected_response": "ヘルプに記載がないため回答できない。サポート窓口または管理者への確認を案内する。", "sources": []}
+{"id": "q24", "category": "unanswerable", "question": "退職した従業員の勤怠データは何年間保存されますか？", "expected_response": "ヘルプに記載がないため回答できない。サポート窓口または管理者への確認を案内する。", "sources": []}
+{"id": "q25", "category": "unanswerable", "question": "勤怠データを取得する API はありますか？", "expected_response": "ヘルプに記載がないため回答できない。サポート窓口または管理者への確認を案内する。", "sources": []}
+{"id": "q26", "category": "version_trap", "question": "旧画面を使っています。休憩の打刻はどうすればいいですか？", "expected_response": "旧画面には休憩の打刻ボタンが無い。管理者が設定した固定の休憩時間が自動で差し引かれる。実際の休憩時間が異なる場合は打刻修正申請で休憩時間を入力する。実時間で打刻したい場合は新画面に切り替える。", "sources": ["03-clock-in-classic.md"]}
+{"id": "q27", "category": "version_trap", "question": "ライトプランです。承認済みの休暇申請を取り下げたいです。", "expected_response": "ライトプランには取り下げ申請の機能が無い。承認者に直接連絡し、承認者が「承認」>「承認履歴」から該当の申請を開いて「承認を取り消す」を押す。承認が取り消されると申請は差し戻しの状態に戻る。", "sources": ["07-withdraw-approved.md", "01-overview-plans.md"]}
+{"id": "q28", "category": "version_trap", "question": "勤怠データを CSV でダウンロードする手順を教えてください。", "expected_response": "手順は画面によって異なる。新画面では「レポート」>「エクスポート」で期間と従業員を指定して「CSV をダウンロード」。旧画面では「集計」>「月次集計」の「CSV 出力」で、表示中の月の全従業員分のみ出力される。どちらの画面を使っているか確認が必要。", "sources": ["13-export-csv.md"]}
+{"id": "q29", "category": "version_trap", "question": "ライトプランで残業申請を出すにはどうすればいいですか？", "expected_response": "ライトプランには残業申請の機能が無い。打刻された退勤時刻をもとに所定労働時間を超えた分がそのまま残業として集計される。申請制にしたい場合はスタンダードプラン以上への変更が必要。", "sources": ["08-request-overtime.md", "01-overview-plans.md"]}
+{"id": "q30", "category": "version_trap", "question": "スタンダードプランです。GPS 打刻を有効にしたいのですが「設定」>「打刻」に項目がありません。", "expected_response": "位置情報つき打刻はプレミアムプランのみ。スタンダードプランでは「位置情報を記録する」の項目が表示されない。利用するにはプレミアムプランへの変更が必要。", "sources": ["11-gps-clock-in.md", "01-overview-plans.md"]}
