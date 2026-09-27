@@ -24,3 +24,12 @@ node_modules/
 
 # CDK
 cdk.out/
+.omni/
+.claude/
+.github/
+.cursor/
+.kiro/
+.agents/
+
+# setup.py が書き出すリソース ID（アカウント ID を含む）
+.state.json
