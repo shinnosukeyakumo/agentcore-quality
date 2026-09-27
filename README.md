@@ -75,24 +75,82 @@ AgentCore Evaluations
 
 ## 動かし方
 
-前提として、AWS の認証情報（東京リージョンで Bedrock と AgentCore を使える権限）、Python 3.12 以上、[uv](https://docs.astral.sh/uv/)、Node.js 20 以上、AgentCore CLI（`npm install -g @aws/agentcore`）が必要です。
+手順は macOS で確かめました。Windows では確かめていません。Windows では PowerShell を使う前提で、macOS と違う箇所を併記しています。
 
-### 1. KB、Guardrail、評価器を作る
+### 0. 準備するもの
+
+| もの | 確かめ方 |
+|---|---|
+| AWS の認証情報（東京リージョンで Bedrock と AgentCore を使える権限） | `aws sts get-caller-identity` |
+| Node.js 20 以上 | `node --version` |
+| AgentCore CLI | `npm install -g @aws/agentcore` のあと `agentcore --version` |
+| uv（Python のパッケージ管理ツール） | 下の手順で入れて `uv --version` |
+
+Python は uv が自動で用意するので、別に入れる必要はありません。
+
+AWS のプロファイルを使う場合は、先に環境変数で指定しておきます。
+
+```sh
+# macOS / Linux
+export AWS_PROFILE=<プロファイル名>
+```
+
+```powershell
+# Windows（PowerShell）
+$env:AWS_PROFILE = "<プロファイル名>"
+```
+
+### 1. uv を入れる
+
+```sh
+# macOS / Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+```powershell
+# Windows（PowerShell）
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+Homebrew（`brew install uv`）や WinGet（`winget install --id=astral-sh.uv -e`）でも入ります。入れたあとはターミナルを開き直してください。
+
+### 2. 仮想環境を作る
+
+リポジトリのいちばん上のフォルダで実行します。
 
 ```sh
 uv sync
-cd setup
-uv run python create_kb.py
-uv run python create_guardrail.py
-uv run python create_evaluator.py
-cd ..
+```
+
+`uv sync` は、フォルダ直下に仮想環境（`.venv`）を作り、Python 3.12 以上と必要なライブラリを入れます。以降のコマンドは `uv run` を付けて実行するので、仮想環境を有効化（activate）する必要はありません。
+
+自分で有効化したい場合は、OS によってコマンドが違います。
+
+```sh
+# macOS / Linux
+source .venv/bin/activate
+```
+
+```powershell
+# Windows（PowerShell）
+.venv\Scripts\activate
+```
+
+エージェント本体（`app/helpdesk/`）の依存ライブラリは、デプロイのときに AgentCore CLI がまとめるので、手元に入れる必要はありません。
+
+### 3. KB、Guardrail、評価器を作る
+
+```sh
+uv run python setup/create_kb.py
+uv run python setup/create_guardrail.py
+uv run python setup/create_evaluator.py
 ```
 
 作ったリソースの ID は `.state.json` に書き出されます（git の管理外です）。
 
-### 2. エージェントを Runtime にデプロイする
+### 4. エージェントを Runtime にデプロイする
 
-`agentcore/aws-targets.json` に自分のアカウント ID とリージョンを書いてから、デプロイします。
+`agentcore/aws-targets.json` を作り、自分のアカウント ID とリージョンを書きます（git の管理外です）。
 
 ```json
 [{"name": "default", "account": "<アカウント ID>", "region": "ap-northeast-1"}]
@@ -100,42 +158,42 @@ cd ..
 
 ```sh
 agentcore deploy -y
-agentcore invoke '{"prompt": "打刻の時刻を間違えました。自分で直せますか？"}'
+agentcore invoke "打刻の時刻を間違えました。自分で直せますか？"
 ```
 
 デプロイ時に、CloudWatch の Transaction Search が有効になります（評価に必須です）。
 
-### 3. ゴールデン QA セットで採点する
+### 5. ゴールデン QA セットで採点する
 
 ```sh
 uv run python run_questions.py --label base
-# トレースが CloudWatch に届くまで数分待つ
 uv run python score.py --label base --passes 3
 ```
 
-### 4. Guardrail を付けて比べる
+答えのトレースが CloudWatch に届くまで数分かかります。`run_questions.py` のあと 5 分ほど待ってから `score.py` を実行してください。
+
+### 6. Guardrail を付けて比べる
 
 ```sh
 uv run python run_questions.py --label guard --guardrail
-uv run python run_questions.py --label attacks-guard \
-    --questions eval/attacks.jsonl --guardrail
+uv run python run_questions.py --label attacks-guard --questions eval/attacks.jsonl --guardrail
 uv run python count_guard.py --attacks attacks-guard --normal guard
 uv run python score.py --label guard --passes 1
 ```
 
-### 5. オンライン評価を設定する
+### 7. オンライン評価を設定する
 
 ```sh
-cd setup && uv run python create_online_eval.py && cd ..
+uv run python setup/create_online_eval.py
 uv run python run_questions.py --label live --questions eval/live.jsonl
 ```
 
-採点結果は CloudWatch Logs の `/aws/bedrock-agentcore/evaluations/results/<設定 ID>` に書き込まれます。サンプルでは動きを確かめやすいよう、全セッションを採点します（本番では割合を下げてください）。
+採点結果は CloudWatch Logs の `/aws/bedrock-agentcore/evaluations/results/<設定 ID>` に書き込まれます。会話が終わってから結果が出るまで 15 分ほどかかります。サンプルでは動きを確かめやすいよう、全セッションを採点します（本番では割合を下げてください）。
 
 ## 片付け
 
 ```sh
-cd setup && uv run python cleanup.py && cd ..
+uv run python setup/cleanup.py
 agentcore remove all -y
 agentcore deploy -y
 ```

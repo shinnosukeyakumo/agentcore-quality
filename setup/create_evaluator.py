@@ -41,11 +41,10 @@ def ensure_evaluator() -> str:
         (e for e in control.list_evaluators()["evaluators"]
          if e.get("evaluatorName") == NAME), None)
     if found:
-        eid = found["evaluatorId"]
-        control.update_evaluator(
-            evaluatorId=eid, evaluatorConfig=config())
-        print(f"updated evaluator {eid}")
-        return eid
+        # オンライン評価で使っている間は更新できない（ロックされる）
+        # ので、すでにあれば何もしない
+        print(f"exists: {found['evaluatorId']}")
+        return found["evaluatorId"]
     eid = control.create_evaluator(
         evaluatorName=NAME, level="TRACE",
         description="回答の事実が検索結果に書かれているか",
