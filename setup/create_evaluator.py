@@ -23,7 +23,8 @@ SCALE = [
 
 
 def config() -> dict:
-    instructions = (ROOT / "eval" / "grounded_check.txt").read_text()
+    path = ROOT / "eval" / "grounded_check.txt"
+    instructions = path.read_text()
     return {"llmAsAJudge": {
         "instructions": instructions,
         "ratingScale": {"numerical": SCALE},
