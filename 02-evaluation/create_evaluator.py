@@ -5,8 +5,11 @@ LLM に判定させる（LLM-as-a-judge）。判定のぶれを抑える
 ため temperature は 0 にする。
 """
 
-from common import ROOT, client, load_state, save_state
+from pathlib import Path
 
+from shared.common import client, load_state, save_state
+
+HERE = Path(__file__).resolve().parent
 NAME = "grounded_check"
 JUDGE_MODEL = "jp.anthropic.claude-sonnet-4-6"
 
@@ -23,7 +26,7 @@ SCALE = [
 
 
 def config() -> dict:
-    path = ROOT / "eval" / "grounded_check.txt"
+    path = HERE / "grounded_check.txt"
     instructions = path.read_text()
     return {"llmAsAJudge": {
         "instructions": instructions,

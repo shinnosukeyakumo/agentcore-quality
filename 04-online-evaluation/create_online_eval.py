@@ -8,13 +8,13 @@
 import json
 import time
 
-from common import (
+from shared.common import (
     PREFIX,
     REGION,
-    ROOT,
     account_id,
     client,
     load_state,
+    runtime,
     save_state,
 )
 
@@ -24,12 +24,6 @@ SAMPLING_PERCENT = 100.0
 
 iam = client("iam")
 control = client("bedrock-agentcore-control")
-
-
-def runtime_id() -> str:
-    path = ROOT / "agentcore/.cli/deployed-state.json"
-    target = json.loads(path.read_text())["targets"]["default"]
-    return target["resources"]["runtimes"]["helpdesk"]["runtimeId"]
 
 
 def ensure_role(log_group: str) -> str:
@@ -100,7 +94,7 @@ def create_with_retry(**kwargs) -> dict:
 
 def main():
     state = load_state()
-    rid = runtime_id()
+    rid = runtime()["runtimeId"]
     log_group = f"/aws/bedrock-agentcore/runtimes/{rid}-DEFAULT"
     service = "agentcorequality_helpdesk.DEFAULT"
     role_arn = ensure_role(log_group)

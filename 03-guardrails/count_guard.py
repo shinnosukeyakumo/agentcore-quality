@@ -1,6 +1,6 @@
 """Guardrail が止めた割合と、止めすぎた割合を数える。
 
-  uv run python count_guard.py \
+  uv run python 03-guardrails/count_guard.py \
       --attacks attacks-guard --normal guard guard2 guard3
 """
 
@@ -10,14 +10,14 @@ import re
 from collections import Counter
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
+RESULTS = Path(__file__).resolve().parent / "results"
 # 質問に含まれる個人情報（メール・電話番号・社員番号）
 PII = re.compile(
     r"[\w.]+@[\w.]+|\d{2,4}-\d{2,4}-\d{4}|E\d{6}")
 
 
 def load(label: str) -> list[dict]:
-    path = ROOT / "results" / f"{label}.jsonl"
+    path = RESULTS / f"{label}.jsonl"
     return [json.loads(x) for x in path.read_text().splitlines()]
 
 

@@ -3,8 +3,10 @@
 1 問ごとに新しいセッションで呼ぶ。セッション ID は、
 あとで AgentCore Evaluations で採点するときに使う。
 
-  uv run python run_questions.py --label base
-  uv run python run_questions.py --label guard --guardrail
+答えは --results-dir（既定は 02-evaluation/results）に
+<label>.jsonl として書き出す。
+
+  uv run python 02-evaluation/run_questions.py --label base
 """
 
 import argparse
@@ -13,17 +15,9 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-import boto3
+from shared.common import ROOT, client, runtime
 
-ROOT = Path(__file__).resolve().parent
-REGION = "ap-northeast-1"
-STATE = ROOT / "agentcore/.cli/deployed-state.json"
-
-
-def runtime_arn() -> str:
-    state = json.loads(STATE.read_text())
-    target = state["targets"]["default"]["resources"]
-    return target["runtimes"]["helpdesk"]["runtimeArn"]
+HERE = Path(__file__).resolve().parent
 
 
 def ask(client, arn, q: dict, guardrail: bool) -> dict:
@@ -43,20 +37,22 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--label", required=True)
     p.add_argument("--questions",
-                   default="eval/questions.jsonl")
+                   default=HERE / "questions.jsonl")
+    p.add_argument("--results-dir",
+                   default=HERE / "results")
     p.add_argument("--guardrail", action="store_true")
     args = p.parse_args()
 
     lines = (ROOT / args.questions).read_text().splitlines()
     qs = [json.loads(line) for line in lines]
-    client = boto3.client("bedrock-agentcore",
-                          region_name=REGION)
-    arn = runtime_arn()
+    agentcore = client("bedrock-agentcore")
+    arn = runtime()["runtimeArn"]
     with ThreadPoolExecutor(max_workers=5) as pool:
         rows = list(pool.map(
-            lambda q: ask(client, arn, q, args.guardrail), qs))
+            lambda q: ask(agentcore, arn, q, args.guardrail),
+            qs))
 
-    out = ROOT / "results" / f"{args.label}.jsonl"
+    out = ROOT / args.results_dir / f"{args.label}.jsonl"
     out.parent.mkdir(exist_ok=True)
     out.write_text("".join(
         json.dumps(r, ensure_ascii=False) + "\n" for r in rows))

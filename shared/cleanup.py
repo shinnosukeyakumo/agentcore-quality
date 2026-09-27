@@ -7,7 +7,7 @@ Runtime とその実行ロールは AgentCore CLI で消す
 
 import time
 
-from common import PREFIX, client, load_state
+from shared.common import PREFIX, client, load_state
 
 control = client("bedrock-agentcore-control")
 bedrock = client("bedrock")

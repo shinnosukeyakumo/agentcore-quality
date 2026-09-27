@@ -4,6 +4,18 @@
 
 本文と同じ状態のコードは、タグ `tbf21-v1.0` を参照してください（入稿時に付与します）。
 
+## フォルダと本の章の対応
+
+| フォルダ | 本の章 | 中身 |
+|---|---|---|
+| `01-quality-app/` | 第2部の1つめの章（AIエージェントの品質） | 題材の問い合わせチャット。エージェント、Runtime へのデプロイ設定、マニュアル、KB を作るスクリプト |
+| `02-evaluation/` | 第2部の2つめの章（AIエージェントの評価） | ゴールデン QA セット、自作の根拠チェック、質問を流して採点するスクリプトと結果 |
+| `03-guardrails/` | 第2部の3つめの章（ガードレール） | Guardrail の設定、攻撃用の質問、止めた割合と止めすぎを数えるスクリプトと結果 |
+| `04-online-evaluation/` | 第2部の4つめの章（本番運用での評価） | オンライン評価の設定と結果 |
+| `shared/` | ― | 各章のスクリプトが共通で使う設定と、片付けのスクリプト |
+
+手順と実行の順番は、このあとの「動かし方」にまとめています。
+
 ## 何をするサンプルか
 
 社内の勤怠システムの使い方マニュアル（15枚）を検索して答える、社内ヘルプデスクの問い合わせチャットです。普通の RAG エージェントを Amazon Bedrock AgentCore Runtime に載せ、次のことを行います。
@@ -46,24 +58,31 @@ AgentCore Evaluations
 | ライブラリ | strands-agents 1.57.1、bedrock-agentcore 1.23.1、boto3 1.43.103、aws-opentelemetry-distro 0.18.0 |
 | CLI | AgentCore CLI（`@aws/agentcore`）0.30.0、uv 0.11 |
 
-## 構成
+## ファイル
+
+### `01-quality-app/`（AIエージェントの品質）
 
 | パス | 内容 |
 |---|---|
 | `help/` | 勤怠システムの使い方マニュアル 15 枚（Markdown） |
-| `app/helpdesk/` | エージェント本体。`main.py`（エージェント）、`search.py`（検索ツール）、`resources.py`（KB と Guardrail の ID を名前から引く） |
+| `app/helpdesk/main.py` | エージェント本体 |
+| `app/helpdesk/search.py` | マニュアルを検索するツール |
+| `app/helpdesk/resources.py` | KB と Guardrail の ID を名前から引き当てる |
 | `agentcore/` | AgentCore CLI のプロジェクト設定と CDK。実行ロールに KB と Guardrail の権限を足してある（`cdk/lib/cdk-stack.ts`） |
-| `setup/` | KB、Guardrail、自作の評価器、オンライン評価を作るスクリプトと、片付けのスクリプト |
-| `eval/questions.jsonl` | ゴールデン QA セット 30 問 |
-| `eval/attacks.jsonl` | 攻撃用の質問 12 問 |
-| `eval/live.jsonl` | 本番の会話に見立てた質問 5 問（オンライン評価の確認用） |
-| `eval/grounded_check.txt` | 自作の評価器（根拠チェック）の判定プロンプト |
-| `run_questions.py` | 質問を Runtime 上のエージェントに流し、答えを `results/` に記録する |
-| `score.py` | 記録した答えを AgentCore Evaluations で採点し、質問の種類ごとに集計する |
-| `count_guard.py` | Guardrail が攻撃を止めた割合と、普通の質問を止めすぎた割合を数える |
-| `results/` | 検証日に取った実測の結果 |
+| `create_kb.py` | S3 にマニュアルを置き、Managed KB を作る |
 
-### ゴールデン QA セットの内訳
+### `02-evaluation/`（AIエージェントの評価）
+
+| パス | 内容 |
+|---|---|
+| `questions.jsonl` | ゴールデン QA セット 30 問 |
+| `grounded_check.txt` | 自作の評価器（根拠チェック）の判定プロンプト |
+| `create_evaluator.py` | 根拠チェックを AgentCore Evaluations に登録する |
+| `run_questions.py` | 質問を Runtime 上のエージェントに流し、答えを記録する（他の章からも使う） |
+| `score.py` | 記録した答えを AgentCore Evaluations で採点し、質問の種類ごとに集計する |
+| `results/` | 実測の結果 |
+
+ゴールデン QA セットの内訳は次のとおりです。ゴールデン QA セットはエージェントに見せず、評価スクリプトだけが読みます。
 
 | `category` | 件数 | 中身 |
 |---|---|---|
@@ -71,11 +90,26 @@ AgentCore Evaluations
 | `tricky` | 5 | 間違えやすい質問。似た名前の機能、新旧の画面、社員・承認者・管理者の立場で答えが変わるもの |
 | `unanswerable` | 5 | マニュアルに記載が無い質問。「記載が無い」と伝えるのが正解 |
 
-ゴールデン QA セットはエージェントに見せません。評価スクリプトだけが読みます。
+### `03-guardrails/`（ガードレール）
+
+| パス | 内容 |
+|---|---|
+| `create_guardrail.py` | Guardrail を作る |
+| `attacks.jsonl` | 攻撃用の質問 12 問 |
+| `count_guard.py` | Guardrail が攻撃を止めた割合と、普通の質問を止めすぎた割合を数える |
+| `results/` | 実測の結果 |
+
+### `04-online-evaluation/`（本番運用での評価）
+
+| パス | 内容 |
+|---|---|
+| `create_online_eval.py` | オンライン評価を設定する |
+| `live.jsonl` | 本番の会話に見立てた質問 5 問 |
+| `results/` | 実測の結果 |
 
 ## 動かし方
 
-手順は macOS で確かめました。Windows では確かめていません。Windows では PowerShell を使う前提で、macOS と違う箇所を併記しています。
+手順は macOS で確かめました。Windows では確かめていません。Windows では PowerShell を使う前提で、macOS と違う箇所を併記しています。コマンドは、特に断りが無ければリポジトリのいちばん上のフォルダで実行します。
 
 ### 0. 準備するもの
 
@@ -136,56 +170,60 @@ source .venv/bin/activate
 .venv\Scripts\activate
 ```
 
-エージェント本体（`app/helpdesk/`）の依存ライブラリは、デプロイのときに AgentCore CLI がまとめるので、手元に入れる必要はありません。
+エージェント本体（`01-quality-app/app/helpdesk/`）の依存ライブラリは、デプロイのときに AgentCore CLI がまとめるので、手元に入れる必要はありません。
 
-### 3. KB、Guardrail、評価器を作る
+### 3. 題材のアプリを作る（01-quality-app）
+
+KB と Guardrail を作ってから、エージェントを Runtime にデプロイします。エージェントは実行時に KB と Guardrail を名前で探すので、先に両方を作っておきます。
 
 ```sh
-uv run python setup/create_kb.py
-uv run python setup/create_guardrail.py
-uv run python setup/create_evaluator.py
+uv run python 01-quality-app/create_kb.py
+uv run python 03-guardrails/create_guardrail.py
 ```
 
 作ったリソースの ID は `.state.json` に書き出されます（git の管理外です）。
 
-### 4. エージェントを Runtime にデプロイする
-
-`agentcore/aws-targets.json` を作り、自分のアカウント ID とリージョンを書きます（git の管理外です）。
+次に `01-quality-app/agentcore/aws-targets.json` を作り、自分のアカウント ID とリージョンを書きます（git の管理外です）。
 
 ```json
 [{"name": "default", "account": "<アカウント ID>", "region": "ap-northeast-1"}]
 ```
 
+AgentCore CLI は `01-quality-app` フォルダで実行します。
+
 ```sh
+cd 01-quality-app
 agentcore deploy -y
 agentcore invoke "打刻の時刻を間違えました。自分で直せますか？"
+cd ..
 ```
 
 デプロイ時に、CloudWatch の Transaction Search が有効になります（評価に必須です）。
 
-### 5. ゴールデン QA セットで採点する
+### 4. ゴールデン QA セットで採点する（02-evaluation）
 
 ```sh
-uv run python run_questions.py --label base
-uv run python score.py --label base --passes 3
+uv run python 02-evaluation/create_evaluator.py
+uv run python 02-evaluation/run_questions.py --label base
+uv run python 02-evaluation/score.py --label base --passes 3
 ```
 
-答えのトレースが CloudWatch に届くまで数分かかります。`run_questions.py` のあと 5 分ほど待ってから `score.py` を実行してください。
+答えのトレースが CloudWatch に届くまで数分かかります。`run_questions.py` のあと 5 分ほど待ってから `score.py` を実行してください。結果は `02-evaluation/results/` に書き出されます。
 
-### 6. Guardrail を付けて比べる
+### 5. Guardrail を付けて比べる（03-guardrails）
 
 ```sh
-uv run python run_questions.py --label guard --guardrail
-uv run python run_questions.py --label attacks-guard --questions eval/attacks.jsonl --guardrail
-uv run python count_guard.py --attacks attacks-guard --normal guard
-uv run python score.py --label guard --passes 1
+uv run python 02-evaluation/run_questions.py --label guard --guardrail --results-dir 03-guardrails/results
+uv run python 02-evaluation/run_questions.py --label attacks-guard --guardrail --questions 03-guardrails/attacks.jsonl --results-dir 03-guardrails/results
+uv run python 03-guardrails/count_guard.py --attacks attacks-guard --normal guard
+uv run python 02-evaluation/score.py --label guard --passes 1 --results-dir 03-guardrails/results
 ```
 
-### 7. オンライン評価を設定する
+### 6. オンライン評価を設定する（04-online-evaluation）
 
 ```sh
-uv run python setup/create_online_eval.py
-uv run python run_questions.py --label live --questions eval/live.jsonl
+uv run python 04-online-evaluation/create_online_eval.py
+uv run python 02-evaluation/run_questions.py --label live --questions 04-online-evaluation/live.jsonl --results-dir 04-online-evaluation/results
 ```
 
 採点結果は CloudWatch Logs の `/aws/bedrock-agentcore/evaluations/results/<設定 ID>` に書き込まれます。会話が終わってから結果が出るまで 15 分ほどかかります。サンプルでは動きを確かめやすいよう、全セッションを採点します（本番では割合を下げてください）。
@@ -193,9 +231,11 @@ uv run python run_questions.py --label live --questions eval/live.jsonl
 ## 片付け
 
 ```sh
-uv run python setup/cleanup.py
+uv run python shared/cleanup.py
+cd 01-quality-app
 agentcore remove all -y
 agentcore deploy -y
+cd ..
 ```
 
 `agentcore remove all` の後の `agentcore deploy` で、Runtime とその実行ロールを含む CloudFormation スタックが消えます。

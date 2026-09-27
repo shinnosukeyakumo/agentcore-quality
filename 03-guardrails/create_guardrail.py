@@ -5,7 +5,7 @@ Standard ティアにする。Standard ティアはクロスリージョン
 推論が必須で、東京からは APAC のプロファイルを使う。
 """
 
-from common import PREFIX, client, load_state, save_state
+from shared.common import PREFIX, client, load_state, save_state
 
 NAME = f"{PREFIX}-guardrail"
 PROFILE = "apac.guardrail.v1:0"

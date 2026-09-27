@@ -3,7 +3,7 @@
 同じ答えを --passes 回採点して平均を取る（判定が揺れるため）。
 結果は質問の種類（category）ごとに集計して表示する。
 
-  uv run python score.py --label base --passes 3
+  uv run python 02-evaluation/score.py --label base --passes 3
 """
 
 import argparse
@@ -18,22 +18,11 @@ from bedrock_agentcore.evaluation import (
     ReferenceInputs,
 )
 
-ROOT = Path(__file__).resolve().parent
-REGION = "ap-northeast-1"
-STATE = ROOT / "agentcore/.cli/deployed-state.json"
+from shared.common import REGION, ROOT, load_state, runtime
+
+HERE = Path(__file__).resolve().parent
 BUILTIN = ["Builtin.Correctness", "Builtin.Refusal",
            "Builtin.Faithfulness"]
-
-
-def agent_id() -> str:
-    state = json.loads(STATE.read_text())
-    target = state["targets"]["default"]["resources"]
-    return target["runtimes"]["helpdesk"]["runtimeId"]
-
-
-def custom_evaluator_id() -> str:
-    return json.loads(
-        (ROOT / ".state.json").read_text())["evaluator_id"]
 
 
 def score(client, aid, evaluators, row) -> list[dict]:
@@ -59,13 +48,16 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--label", required=True)
     p.add_argument("--passes", type=int, default=3)
+    p.add_argument("--results-dir",
+                   default=HERE / "results")
     args = p.parse_args()
 
-    src = ROOT / "results" / f"{args.label}.jsonl"
+    results_dir = ROOT / args.results_dir
+    src = results_dir / f"{args.label}.jsonl"
     rows = [json.loads(x) for x in src.read_text().splitlines()]
     client = EvaluationClient(region_name=REGION)
-    aid = agent_id()
-    evaluators = BUILTIN + [custom_evaluator_id()]
+    aid = runtime()["runtimeId"]
+    evaluators = BUILTIN + [load_state()["evaluator_id"]]
 
     jobs = [(n, r) for n in range(args.passes) for r in rows]
     with ThreadPoolExecutor(max_workers=8) as pool:
@@ -75,7 +67,7 @@ def main():
             jobs))
     scores = [s for batch in out for s in batch]
 
-    dst = ROOT / "results" / f"{args.label}-scores.jsonl"
+    dst = results_dir / f"{args.label}-scores.jsonl"
     dst.write_text("".join(
         json.dumps(s, ensure_ascii=False) + "\n"
         for s in scores))

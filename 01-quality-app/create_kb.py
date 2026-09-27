@@ -9,10 +9,11 @@ import json
 import time
 
 from botocore.exceptions import ClientError
-from common import (
+
+from shared.common import (
+    APP_DIR,
     PREFIX,
     REGION,
-    ROOT,
     account_id,
     client,
     save_state,
@@ -39,7 +40,7 @@ def ensure_bucket():
         print(f"created bucket {BUCKET}")
     except s3.exceptions.BucketAlreadyOwnedByYou:
         pass
-    for path in sorted((ROOT / "help").glob("*.md")):
+    for path in sorted((APP_DIR / "help").glob("*.md")):
         s3.upload_file(str(path), BUCKET, f"help/{path.name}")
     print("uploaded help/*.md")
 
