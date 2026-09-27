@@ -33,3 +33,8 @@ cdk.out/
 
 # setup.py が書き出すリソース ID（アカウント ID を含む）
 .state.json
+
+# AgentCore CLI がアカウント ID や ARN を書き込むファイル
+agentcore/aws-targets.json
+agentcore/.cli/
+agentcore/.env.local
