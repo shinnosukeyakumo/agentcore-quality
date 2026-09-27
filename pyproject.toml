@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "技術書典21 合同誌 第2部「評価と守り」のサンプル"
 requires-python = ">=3.12"
 dependencies = [
+    "bedrock-agentcore>=1.23.1",
     "boto3>=1.43.62",
     "strands-agents>=1.57.0",
 ]
