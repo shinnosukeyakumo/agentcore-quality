@@ -19,8 +19,8 @@ build-backend = "hatchling.build"
 packages = ["shared"]
 
 [tool.ruff]
-# 本に載せるコードは 1 行 68 桁以内（A5 の枠）
-line-length = 68
+# 本に載せるコードは 1 行 78 桁以内（A5 の枠、1 行 38 字）
+line-length = 78
 
 [tool.ruff.lint.isort]
 known-first-party = ["shared", "resources", "search"]

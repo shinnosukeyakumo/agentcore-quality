@@ -5,6 +5,8 @@ Standard ティアにする。Standard ティアはクロスリージョン
 推論が必須で、東京からは APAC のプロファイルを使う。
 """
 
+import sys
+
 from shared.common import PREFIX, client, load_state, save_state
 
 NAME = f"{PREFIX}-guardrail"
@@ -63,10 +65,26 @@ CONFIG = {
 }
 
 
-def ensure_guardrail() -> tuple[str, str]:
+def latest_version(gid: str) -> str:
+    versions = bedrock.list_guardrails(
+        guardrailIdentifier=gid)["guardrails"]
+    return str(max(int(v["version"]) for v in versions
+                   if v["version"] != "DRAFT"))
+
+
+def ensure_guardrail(update: bool) -> tuple[str, str]:
+    """Guardrail を作る。すでにあれば、そのまま使う。
+
+    設定を変えたいときは --update を付けて実行する。
+    変えた設定は新しいバージョンとして公開する。
+    """
     found = next(
         (g for g in bedrock.list_guardrails()["guardrails"]
          if g["name"] == NAME), None)
+    if found and not update:
+        gid = found["id"]
+        print(f"exists: guardrail {gid}")
+        return gid, latest_version(gid)
     if found:
         gid = found["id"]
         bedrock.update_guardrail(
@@ -82,8 +100,12 @@ def ensure_guardrail() -> tuple[str, str]:
     return gid, version
 
 
-if __name__ == "__main__":
+def main(update: bool = False):
     load_state()
-    gid, version = ensure_guardrail()
+    gid, version = ensure_guardrail(update)
     save_state(guardrail_id=gid, guardrail_version=version)
     print("done. wrote .state.json")
+
+
+if __name__ == "__main__":
+    main(update="--update" in sys.argv)

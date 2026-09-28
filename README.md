@@ -12,7 +12,7 @@
 | `02-evaluation/` | 第2部の1つめの章（AIエージェントの評価） | 出す前の評価。ゴールデン QA セット、自作の根拠チェック、質問を流して採点するスクリプトと結果 |
 | `04-online-evaluation/` | 第2部の1つめの章（AIエージェントの評価） | 本番環境での評価。オンライン評価の設定と結果 |
 | `03-guardrails/` | 第2部の2つめの章（ガードレール） | Guardrail の設定、攻撃用の質問、止めた割合と止めすぎを数えるスクリプトと結果。本番で止めすぎに気づく話（オンライン評価の Refusal）もこの章で扱う |
-| `shared/` | ― | 各章のスクリプトが共通で使う設定と、片付けのスクリプト |
+| `shared/` | ― | 共通の設定、セットアップと片付けをまとめたスクリプト |
 
 手順と実行の順番は、このあとの「動かし方」にまとめています。
 
@@ -107,100 +107,80 @@ AgentCore Evaluations
 | `live.jsonl` | 本番の会話に見立てた質問 5 問 |
 | `results/` | 実測の結果 |
 
+### `shared/` と、環境構築のためのファイル
+
+| パス | 内容 |
+|---|---|
+| `shared/setup_all.py` | 題材のアプリを動かすところまでをまとめて準備する |
+| `shared/teardown.py` | サンプルで作った AWS のリソースをまとめて消す |
+| `shared/common.py` | 各章のスクリプトが共通で使う設定 |
+| `shared/cleanup.py` | 各章のスクリプトで作ったリソースを消す（`teardown.py` から呼ぶ） |
+| `.devcontainer/` | 開発コンテナの設定。`local-aws/` は手元の AWS 認証情報を渡す版 |
+| `setup.sh`、`setup.ps1` | 手元で動かすときに、必要なツールがそろっているかを確かめる |
+
 ## 動かし方
 
-手順は macOS で確かめました。Windows では確かめていません。Windows では PowerShell を使う前提で、macOS と違う箇所を併記しています。コマンドは、特に断りが無ければリポジトリのいちばん上のフォルダで実行します。
+手順は、macOS（Apple シリコン）の手元と、開発コンテナ（Linux）の中で確かめました（2026-09-28）。GitHub Codespaces と Windows では確かめていません。
 
-### 0. 準備するもの
+### 準備するもの
 
-| もの | 確かめ方 |
+| もの | 中身 |
 |---|---|
-| AWS の認証情報（東京リージョンで Bedrock と AgentCore を使える権限） | `aws sts get-caller-identity` |
-| Node.js 20 以上 | `node --version` |
-| AgentCore CLI | `npm install -g @aws/agentcore` のあと `agentcore --version` |
-| uv（Python のパッケージ管理ツール） | 下の手順で入れて `uv --version` |
+| AWS アカウント | 東京リージョン（ap-northeast-1）で、Amazon Bedrock（Anthropic のモデル、Knowledge Bases、Guardrails）、Amazon Bedrock AgentCore、IAM、S3、CloudFormation、CloudWatch を使える権限。サンプルは IAM ロールも作るので、管理者に近い権限を想定しています |
+| 実行する環境 | 次の三つのどれか一つ。① Docker と VS Code（Dev Containers 拡張）、② GitHub Codespaces、③ 手元に uv・Node.js 20 以上・AgentCore CLI 0.30.0・AWS CLI v2 を入れる |
 
-Python は uv が自動で用意するので、別に入れる必要はありません。
+### 1. 環境を用意する
 
-AWS のプロファイルを使う場合は、先に環境変数で指定しておきます。
+どの方法でも、必要なツールが入り、Python の環境（`uv sync`）まで自動で整います。
+
+**① VS Code の開発コンテナ（手元の AWS 認証情報をそのまま使う）**
+
+リポジトリを VS Code で開き、コマンドパレットから「Dev Containers: Reopen in Container」を選びます。設定を聞かれたら「agentcore-quality（手元の AWS 認証情報を使う）」を選びます。手元の `~/.aws`（Windows は `%USERPROFILE%\.aws`）がコンテナに渡されるので、手元で `aws sts get-caller-identity` が通っていれば、そのまま使えます。
+
+**② GitHub Codespaces（コンテナの中で AWS にログインする）**
+
+GitHub のリポジトリの画面で「Code」→「Codespaces」から作ります。手元のファイルは渡せないので、コンテナの中で AWS にログインします。IAM Identity Center を使う場合は次のとおりです。
+
+```sh
+aws configure sso
+aws sso login --use-device-code
+```
+
+IAM ユーザーでコンソールにサインインしている場合は、`aws login --remote` でも構いません。どちらも、表示されたコードをブラウザで入力して承認します。VS Code の開発コンテナで「agentcore-quality（コンテナ内で AWS にログインする）」を選んだ場合も、同じ手順です。
+
+**③ 手元で動かす**
+
+足りないツールがあれば、入れ方を表示します。そろっていれば `uv sync` まで行います。
 
 ```sh
 # macOS / Linux
-export AWS_PROFILE=<プロファイル名>
+./setup.sh
 ```
 
 ```powershell
 # Windows（PowerShell）
-$env:AWS_PROFILE = "<プロファイル名>"
+.\setup.ps1
 ```
 
-### 1. uv を入れる
+AWS のプロファイルを使う場合は、環境変数で指定しておきます（macOS / Linux は `export AWS_PROFILE=<プロファイル名>`、Windows の PowerShell は `$env:AWS_PROFILE = "<プロファイル名>"`）。
+
+### 2. 題材のアプリを動かす（セットアップ）
 
 ```sh
-# macOS / Linux
-curl -LsSf https://astral.sh/uv/install.sh | sh
+uv run python shared/setup_all.py
 ```
 
-```powershell
-# Windows（PowerShell）
-powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-```
+次の順に進みます。途中で失敗しても、もう一度流せば続きから進みます（作成済みのリソースは作り直しません）。
 
-Homebrew（`brew install uv`）や WinGet（`winget install --id=astral-sh.uv -e`）でも入ります。入れたあとはターミナルを開き直してください。
+1. S3 にマニュアルを置き、Managed KB を作る（`01-quality-app/create_kb.py`）
+2. Guardrail を作る（`03-guardrails/create_guardrail.py`）
+3. デプロイ先（アカウント ID とリージョン）を `01-quality-app/agentcore/aws-targets.json` に書き出す。アカウント ID は認証情報から自動で取ります
+4. エージェントを AgentCore Runtime にデプロイする（`agentcore deploy`）
+5. 1 問だけ聞いて、動作を確かめる（`agentcore invoke`）
 
-### 2. 仮想環境を作る
+作ったリソースの ID は `.state.json` に書き出されます（git の管理外です）。デプロイ時に、CloudWatch の Transaction Search が有効になります（評価に必須です）。
 
-リポジトリのいちばん上のフォルダで実行します。
-
-```sh
-uv sync
-```
-
-`uv sync` は、フォルダ直下に仮想環境（`.venv`）を作り、Python 3.12 以上と必要なライブラリを入れます。以降のコマンドは `uv run` を付けて実行するので、仮想環境を有効化（activate）する必要はありません。
-
-自分で有効化したい場合は、OS によってコマンドが違います。
-
-```sh
-# macOS / Linux
-source .venv/bin/activate
-```
-
-```powershell
-# Windows（PowerShell）
-.venv\Scripts\activate
-```
-
-エージェント本体（`01-quality-app/app/helpdesk/`）の依存ライブラリは、デプロイのときに AgentCore CLI がまとめるので、手元に入れる必要はありません。
-
-### 3. 題材のアプリを作る（01-quality-app）
-
-KB と Guardrail を作ってから、エージェントを Runtime にデプロイします。エージェントは実行時に KB と Guardrail を名前で探すので、先に両方を作っておきます。
-
-```sh
-uv run python 01-quality-app/create_kb.py
-uv run python 03-guardrails/create_guardrail.py
-```
-
-作ったリソースの ID は `.state.json` に書き出されます（git の管理外です）。
-
-次に `01-quality-app/agentcore/aws-targets.json` を作り、自分のアカウント ID とリージョンを書きます（git の管理外です）。
-
-```json
-[{"name": "default", "account": "<アカウント ID>", "region": "ap-northeast-1"}]
-```
-
-AgentCore CLI は `01-quality-app` フォルダで実行します。
-
-```sh
-cd 01-quality-app
-agentcore deploy -y
-agentcore invoke "打刻の時刻を間違えました。自分で直せますか？"
-cd ..
-```
-
-デプロイ時に、CloudWatch の Transaction Search が有効になります（評価に必須です）。
-
-### 4. ゴールデン QA セットで採点する（02-evaluation）
+### 3. 出す前の評価（02-evaluation）
 
 ```sh
 uv run python 02-evaluation/create_evaluator.py
@@ -210,16 +190,7 @@ uv run python 02-evaluation/score.py --label base --passes 3
 
 答えのトレースが CloudWatch に届くまで数分かかります。`run_questions.py` のあと 5 分ほど待ってから `score.py` を実行してください。結果は `02-evaluation/results/` に書き出されます。
 
-### 5. Guardrail を付けて比べる（03-guardrails）
-
-```sh
-uv run python 02-evaluation/run_questions.py --label guard --guardrail --results-dir 03-guardrails/results
-uv run python 02-evaluation/run_questions.py --label attacks-guard --guardrail --questions 03-guardrails/attacks.jsonl --results-dir 03-guardrails/results
-uv run python 03-guardrails/count_guard.py --attacks attacks-guard --normal guard
-uv run python 02-evaluation/score.py --label guard --passes 1 --results-dir 03-guardrails/results
-```
-
-### 6. オンライン評価を設定する（04-online-evaluation）
+### 4. 本番環境での評価（04-online-evaluation）
 
 ```sh
 uv run python 04-online-evaluation/create_online_eval.py
@@ -228,22 +199,30 @@ uv run python 02-evaluation/run_questions.py --label live --questions 04-online-
 
 採点結果は CloudWatch Logs の `/aws/bedrock-agentcore/evaluations/results/<設定 ID>` に書き込まれます。会話が終わってから結果が出るまで 15 分ほどかかります。サンプルでは動きを確かめやすいよう、全セッションを採点します（本番では割合を下げてください）。
 
+### 5. ガードレール（03-guardrails）
+
+```sh
+uv run python 02-evaluation/run_questions.py --label guard --guardrail --results-dir 03-guardrails/results
+uv run python 02-evaluation/run_questions.py --label attacks-guard --guardrail --questions 03-guardrails/attacks.jsonl --results-dir 03-guardrails/results
+uv run python 03-guardrails/count_guard.py --attacks attacks-guard --normal guard
+uv run python 02-evaluation/score.py --label guard --passes 1 --results-dir 03-guardrails/results
+```
+
+Guardrail の設定（`03-guardrails/create_guardrail.py`）を変えたときは、`uv run python 03-guardrails/create_guardrail.py --update` で新しいバージョンとして公開します。
+
 ## 片付け
 
 ```sh
-uv run python shared/cleanup.py
-cd 01-quality-app
-agentcore remove all -y
-agentcore deploy -y
-cd ..
+uv run python shared/teardown.py
 ```
 
-`agentcore remove all` の後の `agentcore deploy` で、Runtime とその実行ロールを含む CloudFormation スタックが消えます。
+評価器、オンライン評価、Guardrail、KB、S3 バケット、IAM ロールを消してから、`agentcore remove all` と `agentcore deploy` で Runtime とその実行ロールを含む CloudFormation スタックを消します。
 
 次のものは残ります。不要なら手動で消してください。
 
-- CloudWatch Logs のロググループ（`/aws/bedrock-agentcore/` 配下）
+- CloudWatch Logs のロググループ（`/aws/bedrock-agentcore/` 配下。エージェントのログと、オンライン評価の結果）
 - CloudWatch の Transaction Search の設定（アカウントとリージョンごとの設定です。サンプルのために有効にした場合は、CloudWatch の設定画面から戻せます）
+- CDK の準備用スタック（CDKToolkit）。デプロイのときに作られた場合は残ります
 
 ## 注意
 
