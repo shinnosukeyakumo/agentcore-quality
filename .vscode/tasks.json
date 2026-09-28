@@ -1,0 +1,56 @@
+{
+  // VS Code のメニュー「ターミナル → タスクの実行」から、番号の順に実行する
+  "version": "2.0.0",
+  "options": {
+    // Windows でも日本語の表示が崩れないようにする
+    "env": { "PYTHONUTF8": "1" }
+  },
+  "presentation": { "panel": "dedicated", "clear": true },
+  "tasks": [
+    {
+      "label": "1. 準備の確認",
+      "detail": "足りないツールと入れ方を表示する。そろっていれば uv sync まで行う",
+      "type": "shell",
+      "command": "./setup.sh",
+      "windows": {
+        "command": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\setup.ps1"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "2. セットアップ",
+      "detail": "KB と Guardrail を作り、エージェントを AgentCore Runtime にデプロイして動作を確かめる",
+      "type": "shell",
+      "command": "uv run python shared/setup_all.py",
+      "problemMatcher": []
+    },
+    {
+      "label": "3. 質問セットで採点する（第2章）",
+      "detail": "自作の評価器を登録し、30 問を流して、トレースを待ってから採点する（約 10 分）",
+      "type": "shell",
+      "command": "uv run python ch2-evaluation/offline/evaluate.py",
+      "problemMatcher": []
+    },
+    {
+      "label": "4. Guardrail を付けて比べる（第3章）",
+      "detail": "Guardrail ありで質問と攻撃を流し、止めた割合と止めすぎを数えて採点する（約 10 分）",
+      "type": "shell",
+      "command": "uv run python ch3-guardrails/compare.py",
+      "problemMatcher": []
+    },
+    {
+      "label": "5. オンライン評価を設定する（第2章）",
+      "detail": "オンライン評価を設定し、本番に見立てた質問を流す。結果は 15 分ほどで CloudWatch Logs に出る",
+      "type": "shell",
+      "command": "uv run python ch2-evaluation/online/start.py",
+      "problemMatcher": []
+    },
+    {
+      "label": "6. 片付け",
+      "detail": "サンプルで作った AWS のリソースをまとめて消す",
+      "type": "shell",
+      "command": "uv run python shared/teardown.py",
+      "problemMatcher": []
+    }
+  ]
+}

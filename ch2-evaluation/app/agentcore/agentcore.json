@@ -12,7 +12,7 @@
       "name": "helpdesk",
       "build": "CodeZip",
       "entrypoint": "main.py",
-      "codeLocation": "app/helpdesk/",
+      "codeLocation": "helpdesk/",
       "runtimeVersion": "PYTHON_3_14",
       "networkMode": "PUBLIC",
       "protocol": "HTTP"
