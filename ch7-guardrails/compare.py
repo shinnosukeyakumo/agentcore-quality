@@ -3,13 +3,13 @@
 ゴールデン QA セットと攻撃用の質問を Guardrail ありで流し、
 止めた割合と止めすぎた割合を数え、採点もする。
 
-  uv run python ch3-guardrails/compare.py
+  uv run python ch7-guardrails/compare.py
 """
 
 from shared.common import run, wait_for_traces
 
-HERE = "ch3-guardrails"
-RUNNER = "ch2-evaluation/offline/run_questions.py"
+HERE = "ch7-guardrails"
+RUNNER = "ch6-evaluation/offline/run_questions.py"
 RESULTS = ["--results-dir", f"{HERE}/results"]
 
 
@@ -20,7 +20,7 @@ def main():
     run(f"{HERE}/count_guard.py",
         "--attacks", "attacks-guard", "--normal", "guard")
     wait_for_traces()
-    run("ch2-evaluation/offline/score.py", "--label", "guard",
+    run("ch6-evaluation/offline/score.py", "--label", "guard",
         "--passes", "1", *RESULTS)
 
 

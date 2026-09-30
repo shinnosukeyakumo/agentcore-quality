@@ -25,24 +25,24 @@
       "problemMatcher": []
     },
     {
-      "label": "3. 質問セットで採点する（第2章）",
+      "label": "3. 質問セットで採点する（第6章）",
       "detail": "自作の評価器を登録し、30 問を流して、トレースを待ってから採点する（約 10 分）",
       "type": "shell",
-      "command": "uv run python ch2-evaluation/offline/evaluate.py",
+      "command": "uv run python ch6-evaluation/offline/evaluate.py",
       "problemMatcher": []
     },
     {
-      "label": "4. Guardrail を付けて比べる（第3章）",
+      "label": "4. Guardrail を付けて比べる（第7章）",
       "detail": "Guardrail ありで質問と攻撃を流し、止めた割合と止めすぎを数えて採点する（約 10 分）",
       "type": "shell",
-      "command": "uv run python ch3-guardrails/compare.py",
+      "command": "uv run python ch7-guardrails/compare.py",
       "problemMatcher": []
     },
     {
-      "label": "5. オンライン評価を設定する（第2章）",
+      "label": "5. オンライン評価を設定する（第6章）",
       "detail": "オンライン評価を設定し、本番に見立てた質問を流す。結果は 15 分ほどで CloudWatch Logs に出る",
       "type": "shell",
-      "command": "uv run python ch2-evaluation/online/start.py",
+      "command": "uv run python ch6-evaluation/online/start.py",
       "problemMatcher": []
     },
     {

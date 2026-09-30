@@ -3,10 +3,10 @@
 1 問ごとに新しいセッションで呼ぶ。セッション ID は、
 あとで AgentCore Evaluations で採点するときに使う。
 
-答えは --results-dir（既定は ch2-evaluation/offline/results）に
+答えは --results-dir（既定は ch6-evaluation/offline/results）に
 <label>.jsonl として書き出す。
 
-  uv run python ch2-evaluation/offline/run_questions.py --label base
+  uv run python ch6-evaluation/offline/run_questions.py --label base
 """
 
 import argparse

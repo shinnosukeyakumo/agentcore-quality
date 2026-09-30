@@ -25,7 +25,7 @@ def step(n: int, title: str):
 
 
 def agentcore(*args: str):
-    """ch2-evaluation/app で AgentCore CLI を実行する。"""
+    """ch6-evaluation/app で AgentCore CLI を実行する。"""
     exe = shutil.which("agentcore")
     if exe is None:
         sys.exit("agentcore が見つかりません。"
@@ -50,7 +50,7 @@ def main():
     runpy.run_path(str(APP_DIR / "create_kb.py"),
                    run_name="__main__")
     step(2, "Guardrail を作る")
-    runpy.run_path(str(ROOT / "ch3-guardrails/create_guardrail.py"),
+    runpy.run_path(str(ROOT / "ch7-guardrails/create_guardrail.py"),
                    run_name="__main__")
     step(3, "デプロイ先を書き出す")
     write_targets()

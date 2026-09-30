@@ -13,7 +13,7 @@ REGION = os.environ.get("AWS_REGION", "ap-northeast-1")
 ROOT = Path(__file__).resolve().parent.parent
 PREFIX = "agentcore-quality"
 
-APP_DIR = ROOT / "ch2-evaluation/app"
+APP_DIR = ROOT / "ch6-evaluation/app"
 # setup スクリプトが作ったリソースの ID（アカウント ID を含む）
 STATE = ROOT / ".state.json"
 # AgentCore CLI が書き出すデプロイ結果（ARN を含む）

@@ -3,7 +3,7 @@
 同じ答えを --passes 回採点して平均を取る（判定が揺れるため）。
 結果は質問の種類（category）ごとに集計して表示する。
 
-  uv run python ch2-evaluation/offline/score.py --label base --passes 3
+  uv run python ch6-evaluation/offline/score.py --label base --passes 3
 """
 
 import argparse

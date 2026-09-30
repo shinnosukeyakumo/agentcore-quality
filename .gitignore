@@ -35,7 +35,7 @@ cdk.out/
 .state.json
 
 # AgentCore CLI がアカウント ID や ARN を書き込むファイル
-ch2-evaluation/app/agentcore/aws-targets.json
-ch2-evaluation/app/agentcore/.cli/
-ch2-evaluation/app/agentcore/.env.local
-ch2-evaluation/app/agentcore/.cache/
+ch6-evaluation/app/agentcore/aws-targets.json
+ch6-evaluation/app/agentcore/.cli/
+ch6-evaluation/app/agentcore/.env.local
+ch6-evaluation/app/agentcore/.cache/

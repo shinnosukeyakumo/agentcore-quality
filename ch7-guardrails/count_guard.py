@@ -1,6 +1,6 @@
 """Guardrail が止めた割合と、止めすぎた割合を数える。
 
-  uv run python ch3-guardrails/count_guard.py \
+  uv run python ch7-guardrails/count_guard.py \
       --attacks attacks-guard --normal guard guard2 guard3
 """
 

@@ -3,12 +3,12 @@
 自作の評価器を登録し、30 問をエージェントに流し、
 トレースが届くのを待ってから、3 回採点して集計する。
 
-  uv run python ch2-evaluation/offline/evaluate.py
+  uv run python ch6-evaluation/offline/evaluate.py
 """
 
 from shared.common import run, wait_for_traces
 
-HERE = "ch2-evaluation/offline"
+HERE = "ch6-evaluation/offline"
 
 
 def main():
