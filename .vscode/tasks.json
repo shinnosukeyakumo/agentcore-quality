@@ -39,14 +39,21 @@
       "problemMatcher": []
     },
     {
-      "label": "5. オンライン評価を設定する（第6章）",
+      "label": "5. Policy を確かめる（第7章）",
+      "detail": "Gateway を直接呼んで本人と他の社員の照会を試し、エージェントにも3問聞く",
+      "type": "shell",
+      "command": "uv run python ch7-guardrails/check_policy.py",
+      "problemMatcher": []
+    },
+    {
+      "label": "6. オンライン評価を設定する（第6章）",
       "detail": "オンライン評価を設定し、本番に見立てた質問を流す。結果は 15 分ほどで CloudWatch Logs に出る",
       "type": "shell",
       "command": "uv run python ch6-evaluation/online/start.py",
       "problemMatcher": []
     },
     {
-      "label": "6. 片付け",
+      "label": "7. 片付け",
       "detail": "サンプルで作った AWS のリソースをまとめて消す",
       "type": "shell",
       "command": "uv run python shared/teardown.py",

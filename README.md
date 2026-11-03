@@ -9,7 +9,7 @@
 | フォルダ | 本の章 | 中身 |
 |---|---|---|
 | `ch6-evaluation/` | 第6章「AIエージェントの評価」 | 題材のアプリ（`app/`）、出す前の評価（`offline/`）、本番環境での評価（`online/`） |
-| `ch7-guardrails/` | 第7章「ガードレール」 | Guardrail の設定、攻撃用の質問、止めた割合と止めすぎの測定 |
+| `ch7-guardrails/` | 第7章「ガードレール」 | Guardrail の設定、攻撃用の質問、止めた割合と止めすぎの測定、勤怠のツールの Policy |
 | `shared/` | ― | 共通の設定と、セットアップ・片付けをまとめたスクリプト |
 
 ## 何をするサンプルか
@@ -19,6 +19,7 @@
 - AgentCore Evaluations で、正解つきの質問セット（ゴールデン QA セット）を使って答えを採点する
 - 自作の評価器（根拠チェック）で、答えがマニュアルに書かれていることだけでできているかを確かめる
 - Amazon Bedrock Guardrails で、プロンプトインジェクション、他の社員の情報を聞き出す質問、個人情報を止める
+- 勤怠の記録を照会するツールを AgentCore Gateway の先に置き、AgentCore Policy（Cedar）で本人の記録だけを照会させる
 - 本番の会話を、オンライン評価で採点し続ける
 
 マニュアルは本書のために作った架空のものです。
@@ -32,6 +33,9 @@ AgentCore Runtime（東京）
     ├ Guardrails（呼び出しごとに付け外し）
     ├ 検索ツール ─▶ Bedrock Managed Knowledge Base
     │               └ マニュアル15枚（S3）
+    ├ MCP ─▶ AgentCore Gateway
+    │        ├ AgentCore Policy（Cedar。本人の記録だけ通す）
+    │        └ Lambda（勤怠照会。架空の記録）
     └ Claude Sonnet 4.6（jp. 推論プロファイル）
  │ トレース
  ▼
@@ -47,11 +51,11 @@ AgentCore Evaluations
 
 | 項目 | 内容 |
 |---|---|
-| 検証日 | 2026-09-27 |
+| 検証日 | 2026-09-27（Gateway と Policy は 2026-11-03） |
 | AWS リージョン | 東京（ap-northeast-1） |
 | モデル | `jp.anthropic.claude-sonnet-4-6` |
-| 使用サービス | Amazon Bedrock AgentCore（Runtime、Evaluations）、Amazon Bedrock（Managed Knowledge Base、Guardrails）、Amazon S3、Amazon CloudWatch |
-| ライブラリ | strands-agents 1.57.1、bedrock-agentcore 1.23.1、boto3 1.43.103、aws-opentelemetry-distro 0.18.0 |
+| 使用サービス | Amazon Bedrock AgentCore（Runtime、Gateway、Policy、Evaluations）、Amazon Bedrock（Managed Knowledge Base、Guardrails）、AWS Lambda、Amazon S3、Amazon CloudWatch |
+| ライブラリ | strands-agents 1.57.1、bedrock-agentcore 1.23.1、boto3 1.43.103、aws-opentelemetry-distro 0.18.0、mcp-proxy-for-aws 1.7.0 |
 | CLI | AgentCore CLI（`@aws/agentcore`）0.30.0、uv 0.11 |
 
 ## ファイル
@@ -63,8 +67,11 @@ AgentCore Evaluations
 | `help/` | 勤怠システムの使い方マニュアル 15 枚（Markdown） |
 | `helpdesk/main.py` | エージェント本体 |
 | `helpdesk/search.py` | マニュアルを検索するツール |
+| `helpdesk/gateway.py` | Gateway のツールを MCP で使う。Runtime の実行ロールで SigV4 署名する |
+| `attendance/handler.py` | 勤怠の記録を返す Lambda（Gateway のツール）。記録は架空のもの |
 | `helpdesk/resources.py` | KB と Guardrail の ID を名前から引き当てる |
-| `agentcore/` | AgentCore CLI のプロジェクト設定と CDK。実行ロールに KB と Guardrail の権限を足してある（`cdk/lib/cdk-stack.ts`） |
+| `agentcore/` | AgentCore CLI のプロジェクト設定と CDK。Gateway、Lambda のターゲット、policy engine もここで定義する。実行ロールに KB と Guardrail の権限を足してある（`cdk/lib/cdk-stack.ts`） |
+| `agentcore/policies/self_only.cedar` | 本人（E0001）の記録だけを照会させる Cedar のポリシー。Gateway の ARN は `create_policy.py` が実行時に埋める |
 | `create_kb.py` | S3 にマニュアルを置き、Managed KB を作る |
 
 ### `ch6-evaluation/offline/`（出す前の評価）
@@ -93,7 +100,7 @@ AgentCore Evaluations
 |---|---|
 | `create_online_eval.py` | オンライン評価を設定する |
 | `live.jsonl` | 本番の会話に見立てた質問 5 問 |
-| `start.py` | オンライン評価を設定し、`live.jsonl` の質問を流す（手順 5） |
+| `start.py` | オンライン評価を設定し、`live.jsonl` の質問を流す（手順 6） |
 | `results/` | 実測の結果 |
 
 ### `ch7-guardrails/`（ガードレール）
@@ -104,6 +111,8 @@ AgentCore Evaluations
 | `attacks.jsonl` | 攻撃用の質問 12 問 |
 | `count_guard.py` | Guardrail が攻撃を止めた割合と、普通の質問を止めすぎた割合を数える |
 | `compare.py` | Guardrail ありで質問と攻撃を流し、数えて採点する（手順 4） |
+| `create_policy.py` | デプロイ済みの Gateway に、勤怠のツールの Policy を作る（手順 2 から呼ぶ） |
+| `check_policy.py` | Gateway を直接呼んで本人と他の社員の照会を試し、エージェント経由でも3問聞く（手順 5） |
 | `results/` | 実測の結果 |
 
 ### `shared/` と、準備のためのファイル
@@ -111,7 +120,7 @@ AgentCore Evaluations
 | パス | 内容 |
 |---|---|
 | `shared/setup_all.py` | 題材のアプリを動かすところまでをまとめて準備する（手順 2） |
-| `shared/teardown.py` | サンプルで作った AWS のリソースをまとめて消す（手順 6） |
+| `shared/teardown.py` | サンプルで作った AWS のリソースをまとめて消す（手順 7） |
 | `shared/common.py` | 各章のスクリプトが共通で使う設定 |
 | `shared/cleanup.py` | 各章のスクリプトで作ったリソースを消す（`teardown.py` から呼ぶ） |
 | `setup.sh`、`setup.ps1` | 必要なツールがそろっているかを確かめる（手順 1） |
@@ -141,11 +150,12 @@ AgentCore Evaluations
 | 手順 | コマンド | 中で行うこと |
 |---|---|---|
 | 1. 準備の確認 | macOS / Linux は `./setup.sh`、Windows（PowerShell）は `.\setup.ps1` | uv、Node.js（20 以上か）、AgentCore CLI、AWS CLI がそろっているかを確かめ、足りないものの入れ方を表示する。そろっていれば `uv sync` で Python の環境を作る |
-| 2. セットアップ | `uv run python shared/setup_all.py` | KB と Guardrail を作り、デプロイ先を書き出し、エージェントを Runtime にデプロイして、1 問で動作を確かめる |
+| 2. セットアップ | `uv run python shared/setup_all.py` | KB と Guardrail を作り、デプロイ先を書き出し、エージェントと Gateway をデプロイし、Policy を作って、1 問で動作を確かめる |
 | 3. 質問セットで採点する（第6章） | `uv run python ch6-evaluation/offline/evaluate.py` | 自作の評価器を登録し、ゴールデン QA セット 30 問を流し、トレースを 5 分待ってから 3 回採点して集計する（約 10 分） |
 | 4. Guardrail を付けて比べる（第7章） | `uv run python ch7-guardrails/compare.py` | Guardrail ありでゴールデン QA セットと攻撃用の質問を流し、止めた割合と止めすぎた割合を数え、採点する（約 10 分） |
-| 5. オンライン評価を設定する（第6章） | `uv run python ch6-evaluation/online/start.py` | オンライン評価を設定し、本番に見立てた質問を 5 問流す |
-| 6. 片付け | `uv run python shared/teardown.py` | サンプルで作った AWS のリソースをまとめて消す |
+| 5. Policy を確かめる（第7章） | `uv run python ch7-guardrails/check_policy.py` | Gateway を直接呼んで、本人（E0001）の照会が通り、他の社員（E0002）の照会が拒否されることを確かめる。続けてエージェントに3問聞き、呼んだツールと答えを表示する。結果は `ch7-guardrails/results/policy.json` |
+| 6. オンライン評価を設定する（第6章） | `uv run python ch6-evaluation/online/start.py` | オンライン評価を設定し、本番に見立てた質問を 5 問流す |
+| 7. 片付け | `uv run python shared/teardown.py` | サンプルで作った AWS のリソースをまとめて消す |
 
 VS Code のタスクの名前は、上の「手順」の列と同じです。
 
@@ -156,21 +166,22 @@ VS Code のタスクの名前は、上の「手順」の列と同じです。
 1. S3 にマニュアルを置き、Managed KB を作る（`ch6-evaluation/app/create_kb.py`）
 2. Guardrail を作る（`ch7-guardrails/create_guardrail.py`）
 3. デプロイ先（アカウント ID とリージョン）を `ch6-evaluation/app/agentcore/aws-targets.json` に書き出す。アカウント ID は認証情報から自動で取ります
-4. エージェントを AgentCore Runtime にデプロイする（`agentcore deploy`）
-5. 1 問だけ聞いて、動作を確かめる（`agentcore invoke`）
+4. エージェント、Gateway、勤怠の Lambda、policy engine をデプロイする（`agentcore deploy`）
+5. 勤怠のツールの Policy を作る（`ch7-guardrails/create_policy.py`）。Cedar のポリシーには Gateway の ARN が要るため、デプロイの後に API で作ります。ARN をリポジトリに書かないためでもあります
+6. 1 問だけ聞いて、動作を確かめる（`agentcore invoke`）
 
 作ったリソースの ID は `.state.json` に書き出されます（git の管理外です）。デプロイ時に、CloudWatch の Transaction Search が有効になります（評価に必須です）。
 
 ### 結果の見方
 
 - 手順 3 の結果は `ch6-evaluation/offline/results/`、手順 4 の結果は `ch7-guardrails/results/` に書き出されます
-- 手順 5 の採点結果は、会話が終わってから 15 分ほどで CloudWatch Logs の `/aws/bedrock-agentcore/evaluations/results/<設定 ID>` に出ます。サンプルでは動きを確かめやすいよう全セッションを採点します（本番では割合を下げてください）
+- 手順 6 の採点結果は、会話が終わってから 15 分ほどで CloudWatch Logs の `/aws/bedrock-agentcore/evaluations/results/<設定 ID>` に出ます。サンプルでは動きを確かめやすいよう全セッションを採点します（本番では割合を下げてください）
 - `ch7-guardrails/results/online-scores.jsonl` は、手順 4 の会話（2回目・3回目の30問と、Guardrail ありの攻撃12問）をオンライン評価がさかのぼって採点した結果です。CloudWatch Logs から書き出し、`session_id` で質問と突き合わせました。第7章「本番環境での過剰なブロック」の数字はここから計算しています
 - Guardrail の設定（`ch7-guardrails/create_guardrail.py`）を変えたときは、`uv run python ch7-guardrails/create_guardrail.py --update` で新しいバージョンとして公開します
 
 ## 片付け
 
-手順 6（`uv run python shared/teardown.py`）で、評価器、オンライン評価、Guardrail、KB、S3 バケット、IAM ロールを消してから、`agentcore remove all` と `agentcore deploy` で Runtime とその実行ロールを含む CloudFormation スタックを消します。
+手順 7（`uv run python shared/teardown.py`）で、評価器、オンライン評価、勤怠のツールの Policy、Guardrail、KB、S3 バケット、IAM ロールを消してから、`agentcore remove all` と `agentcore deploy` で Runtime、Gateway、Lambda、policy engine と、それぞれの実行ロールを含む CloudFormation スタックを消します。Policy を先に消すのは、Policy が残っていると policy engine を消せないためです。
 
 次のものは残ります。不要なら手動で消してください。
 
