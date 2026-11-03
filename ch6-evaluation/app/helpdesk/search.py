@@ -15,7 +15,8 @@ def search_manual(query: str) -> str:
     """勤怠システムの使い方マニュアルを検索する。
 
     Args:
-        query: 調べたい内容
+        query: 調べたい内容。単語を並べず、文で書く
+            （例：新画面で出勤を打刻する方法）
     """
     res = kb.retrieve(
         knowledgeBaseId=knowledge_base_id(),
