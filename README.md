@@ -165,6 +165,7 @@ VS Code のタスクの名前は、上の「手順」の列と同じです。
 
 - 手順 3 の結果は `ch6-evaluation/offline/results/`、手順 4 の結果は `ch7-guardrails/results/` に書き出されます
 - 手順 5 の採点結果は、会話が終わってから 15 分ほどで CloudWatch Logs の `/aws/bedrock-agentcore/evaluations/results/<設定 ID>` に出ます。サンプルでは動きを確かめやすいよう全セッションを採点します（本番では割合を下げてください）
+- `ch7-guardrails/results/online-scores.jsonl` は、手順 4 の会話（2回目・3回目の30問と、Guardrail ありの攻撃12問）をオンライン評価がさかのぼって採点した結果です。CloudWatch Logs から書き出し、`session_id` で質問と突き合わせました。第7章「本番環境での過剰なブロック」の数字はここから計算しています
 - Guardrail の設定（`ch7-guardrails/create_guardrail.py`）を変えたときは、`uv run python ch7-guardrails/create_guardrail.py --update` で新しいバージョンとして公開します
 
 ## 片付け
