@@ -1,7 +1,8 @@
 """題材のアプリを動かすところまでを、まとめて準備する。
 
 KB と Guardrail を作り、デプロイ先の設定を書き、
-AgentCore Runtime にデプロイして、1 問だけ試しに聞く。
+AgentCore Runtime にデプロイし、勤怠のツールの policy を作って、
+1 問だけ試しに聞く。
 途中で失敗しても、もう一度流せば続きから進む
 （作成済みのリソースは作り直さない）。
 
@@ -21,7 +22,7 @@ QUESTION = "打刻の時刻を間違えました。自分で直せますか？"
 
 
 def step(n: int, title: str):
-    print(f"\n[{n}/5] {title}", flush=True)
+    print(f"\n[{n}/6] {title}", flush=True)
 
 
 def agentcore(*args: str):
@@ -56,7 +57,10 @@ def main():
     write_targets()
     step(4, "エージェントを Runtime にデプロイする")
     agentcore("deploy", "-y")
-    step(5, "動作を確かめる")
+    step(5, "勤怠のツールの policy を作る")
+    runpy.run_path(str(ROOT / "ch7-guardrails/create_policy.py"),
+                   run_name="__main__")
+    step(6, "動作を確かめる")
     agentcore("invoke", QUESTION)
     print("\nセットアップが終わりました。")
 

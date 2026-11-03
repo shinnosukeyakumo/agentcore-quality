@@ -6,6 +6,7 @@ requires-python = ">=3.12"
 dependencies = [
     "bedrock-agentcore>=1.23.1",
     "boto3>=1.43.62",
+    "mcp-proxy-for-aws>=1.7.0",
     "strands-agents>=1.57.0",
 ]
 
@@ -23,4 +24,4 @@ packages = ["shared"]
 line-length = 78
 
 [tool.ruff.lint.isort]
-known-first-party = ["shared", "resources", "search"]
+known-first-party = ["shared", "resources", "search", "gateway"]

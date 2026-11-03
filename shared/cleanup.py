@@ -2,7 +2,8 @@
 
 Runtime とその実行ロールは AgentCore CLI で消す
 （README の「片付け」を参照）。このスクリプトは
-オンライン評価、評価器、Guardrail、KB、S3、IAM ロールを消す。
+オンライン評価、評価器、勤怠のツールの policy、Guardrail、KB、
+S3、IAM ロールを消す。
 """
 
 import time
@@ -34,8 +35,21 @@ def delete_role(name: str):
     safe(f"role {name}", iam.delete_role, RoleName=name)
 
 
+def delete_policies():
+    """create_policy.py で作った policy。残っているとエンジンを消せない。"""
+    for engine in control.list_policy_engines()["policyEngines"]:
+        if engine["name"] != "agentcorequality_helpdesk_policy":
+            continue
+        engine_id = engine["policyEngineId"]
+        policies = control.list_policies(policyEngineId=engine_id)
+        for p in policies["policies"]:
+            safe(f"policy {p['name']}", control.delete_policy,
+                 policyEngineId=engine_id, policyId=p["policyId"])
+
+
 def main():
     st = load_state()
+    delete_policies()
     # 評価器はオンライン評価で使われている間は消せないので先に消す
     if "online_eval_id" in st:
         safe("online evaluation",

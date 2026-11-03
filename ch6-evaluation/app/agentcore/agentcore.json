@@ -23,8 +23,64 @@
   "credentials": [],
   "evaluators": [],
   "onlineEvalConfigs": [],
-  "agentCoreGateways": [],
-  "policyEngines": [],
+  "agentCoreGateways": [
+    {
+      "name": "tools",
+      "protocolType": "MCP",
+      "description": "ヘルプデスクのツール",
+      "targets": [
+        {
+          "name": "attendance",
+          "targetType": "lambda",
+          "toolDefinitions": [
+            {
+              "name": "get_attendance",
+              "description": "社員の、指定した月の勤怠の記録（出勤日数、残業時間、有給休暇の残り、打刻漏れ）を返す。",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "employee_id": {
+                    "type": "string",
+                    "description": "社員番号（例: E0001）"
+                  },
+                  "month": {
+                    "type": "string",
+                    "description": "対象の月（YYYY-MM）"
+                  }
+                },
+                "required": [
+                  "employee_id",
+                  "month"
+                ]
+              }
+            }
+          ],
+          "compute": {
+            "host": "Lambda",
+            "implementation": {
+              "language": "Python",
+              "path": "attendance/",
+              "handler": "handler.handler"
+            },
+            "pythonVersion": "PYTHON_3_14"
+          }
+        }
+      ],
+      "authorizerType": "AWS_IAM",
+      "enableSemanticSearch": false,
+      "exceptionLevel": "NONE",
+      "policyEngineConfiguration": {
+        "policyEngineName": "helpdesk_policy",
+        "mode": "ENFORCE"
+      }
+    }
+  ],
+  "policyEngines": [
+    {
+      "name": "helpdesk_policy",
+      "policies": []
+    }
+  ],
   "configBundles": [],
   "abTests": [],
   "harnesses": [],
