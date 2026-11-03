@@ -8,8 +8,8 @@
 
 | フォルダ | 本の章 | 中身 |
 |---|---|---|
-| `ch6-evaluation/` | 第6章「AIエージェントの評価」 | 題材のアプリ（`app/`）、出す前の評価（`offline/`）、本番環境での評価（`online/`） |
-| `ch7-guardrails/` | 第7章「ガードレール」 | Guardrail の設定、攻撃用の質問、止めた割合と止めすぎの測定、勤怠のツールの Policy |
+| `ch6-evaluation/` | 第5章「AIエージェントの評価」 | 題材のアプリ（`app/`）、出す前の評価（`offline/`）、本番環境での評価（`online/`） |
+| `ch7-guardrails/` | 第6章「ガードレール」 | Guardrail の設定、攻撃用の質問、止めた割合と止めすぎの測定、勤怠のツールの Policy |
 | `shared/` | ― | 共通の設定と、セットアップ・片付けをまとめたスクリプト |
 
 ## 何をするサンプルか
@@ -81,7 +81,7 @@ AgentCore Evaluations
 | `questions.jsonl` | ゴールデン QA セット 30 問 |
 | `grounded_check.txt` | 自作の評価器（根拠チェック）の判定プロンプト |
 | `create_evaluator.py` | 根拠チェックを AgentCore Evaluations に登録する |
-| `run_questions.py` | 質問を Runtime 上のエージェントに流し、答えを記録する（第7章からも使う） |
+| `run_questions.py` | 質問を Runtime 上のエージェントに流し、答えを記録する（第6章からも使う） |
 | `score.py` | 記録した答えを AgentCore Evaluations で採点し、質問の種類ごとに集計する |
 | `evaluate.py` | 上の三つを順に実行する（手順 3） |
 | `results/` | 実測の結果 |
@@ -151,10 +151,10 @@ AgentCore Evaluations
 |---|---|---|
 | 1. 準備の確認 | macOS / Linux は `./setup.sh`、Windows（PowerShell）は `.\setup.ps1` | uv、Node.js（20 以上か）、AgentCore CLI、AWS CLI がそろっているかを確かめ、足りないものの入れ方を表示する。そろっていれば `uv sync` で Python の環境を作る |
 | 2. セットアップ | `uv run python shared/setup_all.py` | KB と Guardrail を作り、デプロイ先を書き出し、エージェントと Gateway をデプロイし、Policy を作って、1 問で動作を確かめる |
-| 3. 質問セットで採点する（第6章） | `uv run python ch6-evaluation/offline/evaluate.py` | 自作の評価器を登録し、ゴールデン QA セット 30 問を流し、トレースを 5 分待ってから 3 回採点して集計する（約 10 分） |
-| 4. Guardrail を付けて比べる（第7章） | `uv run python ch7-guardrails/compare.py` | Guardrail ありでゴールデン QA セットと攻撃用の質問を流し、止めた割合と止めすぎた割合を数え、採点する（約 10 分） |
-| 5. Policy を確かめる（第7章） | `uv run python ch7-guardrails/check_policy.py` | Gateway を直接呼んで、本人（E0001）の照会が通り、他の社員（E0002）の照会が拒否されることを確かめる。続けてエージェントに3問聞き、呼んだツールと答えを表示する。結果は `ch7-guardrails/results/policy.json` |
-| 6. オンライン評価を設定する（第6章） | `uv run python ch6-evaluation/online/start.py` | オンライン評価を設定し、本番に見立てた質問を 5 問流す |
+| 3. 質問セットで採点する（第5章） | `uv run python ch6-evaluation/offline/evaluate.py` | 自作の評価器を登録し、ゴールデン QA セット 30 問を流し、トレースを 5 分待ってから 3 回採点して集計する（約 10 分） |
+| 4. Guardrail を付けて比べる（第6章） | `uv run python ch7-guardrails/compare.py` | Guardrail ありでゴールデン QA セットと攻撃用の質問を流し、止めた割合と止めすぎた割合を数え、採点する（約 10 分） |
+| 5. Policy を確かめる（第6章） | `uv run python ch7-guardrails/check_policy.py` | Gateway を直接呼んで、本人（E0001）の照会が通り、他の社員（E0002）の照会が拒否されることを確かめる。続けてエージェントに3問聞き、呼んだツールと答えを表示する。結果は `ch7-guardrails/results/policy.json` |
+| 6. オンライン評価を設定する（第5章） | `uv run python ch6-evaluation/online/start.py` | オンライン評価を設定し、本番に見立てた質問を 5 問流す |
 | 7. 片付け | `uv run python shared/teardown.py` | サンプルで作った AWS のリソースをまとめて消す |
 
 VS Code のタスクの名前は、上の「手順」の列と同じです。
@@ -176,7 +176,7 @@ VS Code のタスクの名前は、上の「手順」の列と同じです。
 
 - 手順 3 の結果は `ch6-evaluation/offline/results/`、手順 4 の結果は `ch7-guardrails/results/` に書き出されます
 - 手順 6 の採点結果は、会話が終わってから 15 分ほどで CloudWatch Logs の `/aws/bedrock-agentcore/evaluations/results/<設定 ID>` に出ます。サンプルでは動きを確かめやすいよう全セッションを採点します（本番では割合を下げてください）
-- `ch7-guardrails/results/online-scores.jsonl` は、手順 4 の会話（2回目・3回目の30問と、Guardrail ありの攻撃12問）をオンライン評価がさかのぼって採点した結果です。CloudWatch Logs から書き出し、`session_id` で質問と突き合わせました。第7章「本番環境での過剰なブロック」の数字はここから計算しています
+- `ch7-guardrails/results/online-scores.jsonl` は、手順 4 の会話（2回目・3回目の30問と、Guardrail ありの攻撃12問）をオンライン評価がさかのぼって採点した結果です。CloudWatch Logs から書き出し、`session_id` で質問と突き合わせました。第6章「本番環境での過剰なブロック」の数字はここから計算しています
 - Guardrail の設定（`ch7-guardrails/create_guardrail.py`）を変えたときは、`uv run python ch7-guardrails/create_guardrail.py --update` で新しいバージョンとして公開します
 
 ## 片付け
